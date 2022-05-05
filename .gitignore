@@ -1,0 +1,24 @@
+# Metals
+.bsp/
+.idea/
+.metals/
+
+# Mac stuff
+.DS_Store
+**/.DS_Store
+
+# Environment variables
+.envrc
+
+# Scala sStuff
+# gitignore file for build related files, not for developer's tools files, see: https://git-scm.com/docs/gitignore
+target/
+project/target
+*.class
+*.log
+
+*.json
+*.mp3
+
+tmp/
+!tmp/.keep
