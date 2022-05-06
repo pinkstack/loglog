@@ -1,14 +1,18 @@
 package com.pinkstack.loglog
 
 import zio.*
-import zio.ZIO.{acquireReleaseWith, attempt, attemptBlocking, fromEither, logInfo}
+import zio.ZIO.{acquireRelease, acquireReleaseWith, attempt, attemptBlocking, fromEither, logInfo}
 import zio.Console.{print, printLine}
 import zio.json.*
 import zio.json.yaml.*
+
 import java.io.IOException
 import java.net.{URI, URL}
 import scala.io.BufferedSource
-import scala.concurrent.duration
+import scala.concurrent.{duration, ExecutionContext, Future, Promise}
+import org.asynchttpclient.{AsyncHttpClient, ListenableFuture, Request, Response}
+import org.asynchttpclient.Dsl.{asyncHttpClient, get, post}
+
 case class Channel(name: String, url: URL, enabled: Boolean)
 
 object Channel {
@@ -16,27 +20,29 @@ object Channel {
   implicit val channelDecoder: JsonDecoder[Channel] = DeriveJsonDecoder.gen[Channel]
 }
 
+type Channels = Vector[Channel]
+
 object HelloApp extends ZIOAppDefault:
 
-  def updateChannels(channels: Vector[Channel]) =
+  def updateChannels(channels: Vector[Channel]): Task[Vector[Unit]] =
     ZIO.foreachPar(channels)(fetchChannelStats).withParallelism(4)
 
   def fetchChannelStats(channel: Channel): Task[Unit] =
     (ZIO.attempt(println(s"Fetching ${channel}")) *> printLine("Done fetching")).delay(1.second)
 
-  def activeChannels(): Task[Vector[Channel]] =
+  def activeChannels(): Task[Channels] =
     for
-      content <- Resources.read("channels.yml").orDie
-      channels <- fromEither(content.fromYaml[Vector[Channel]])
-        .map(_.filter(_.enabled))
-        .mapError(e => new Throwable(e))
-    yield channels
+      content  <- Resources.read("channels.yml").orDie
+      channels <- fromEither(content.fromYaml[Channels]).mapError(e => new Throwable(e))
+    yield channels.filter(_.enabled)
 
-  def app =
+  def app: ZIO[HttpClient, Throwable, Unit] =
     for
-      _ <- logInfo("Booting...")
-      v <- activeChannels().flatMap(updateChannels) repeat Schedule.forever && Schedule.spaced(2.seconds)
-      _ <- ZIO.debug(v)
+      _       <- logInfo("Booting...")
+      backend <- HttpClient.executeRequest(get("http://icanhazip.com/").build())
+      _       <- ZIO.debug(s"Response is \"${backend}\"")
+      _       <- ZIO.debug("Done...")
     yield ()
 
   def run: ZIO[Any, Throwable, Unit] = app
+    .provideLayer(HttpClientLive.layer)
