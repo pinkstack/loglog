@@ -13,7 +13,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "loglog",
     libraryDependencies ++= {
-      zio ++ asyncHttpClient ++ logging
+      zio ++ asyncHttpClient ++ logging ++ circe
     },
     resolvers           := Dependencies.resolvers,
     Compile / mainClass := Some("com.pinkstack.loglog.HelloApp")

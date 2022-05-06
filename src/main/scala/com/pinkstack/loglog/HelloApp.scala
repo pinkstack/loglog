@@ -1,17 +1,19 @@
 package com.pinkstack.loglog
 
+import io.circe.parser.parse as circeParse
+import io.circe.{Json, ParsingFailure}
+import org.asynchttpclient.Dsl.{asyncHttpClient, get, post}
+import org.asynchttpclient.{AsyncHttpClient, ListenableFuture, Request, Response}
 import zio.*
-import zio.ZIO.{acquireRelease, acquireReleaseWith, attempt, attemptBlocking, fromEither, logInfo}
 import zio.Console.{print, printLine}
+import zio.ZIO.{acquireRelease, acquireReleaseWith, attempt, attemptBlocking, fromEither, logInfo}
 import zio.json.*
 import zio.json.yaml.*
 
 import java.io.IOException
 import java.net.{URI, URL}
+import scala.concurrent.{ExecutionContext, Future, Promise, duration}
 import scala.io.BufferedSource
-import scala.concurrent.{duration, ExecutionContext, Future, Promise}
-import org.asynchttpclient.{AsyncHttpClient, ListenableFuture, Request, Response}
-import org.asynchttpclient.Dsl.{asyncHttpClient, get, post}
 
 case class Channel(name: String, url: URL, enabled: Boolean)
 
@@ -24,11 +26,19 @@ type Channels = Vector[Channel]
 
 object HelloApp extends ZIOAppDefault:
 
-  def updateChannels(channels: Vector[Channel]): Task[Vector[Unit]] =
+  def updateChannels(channels: Vector[Channel]): ZIO[HttpClient, Throwable, Vector[Unit]] =
     ZIO.foreachPar(channels)(fetchChannelStats).withParallelism(4)
 
-  def fetchChannelStats(channel: Channel): Task[Unit] =
-    (ZIO.attempt(println(s"Fetching ${channel}")) *> printLine("Done fetching")).delay(1.second)
+  val readCount: Json => Option[Int] =
+    _.hcursor.downField("response").downField("concurrent").get[Int]("cnt").toOption
+
+  def fetchChannelStats(channel: Channel): ZIO[HttpClient, Throwable, Unit] =
+    for
+      body               <- HttpClient.executeRequest(get(channel.url.toString).build())
+      count: Option[Int] <- fromEither(circeParse(body)).map(readCount)
+      _ <- ZIO
+        .when(count.isDefined)(printLine(s"${channel.name}: ${count.get}"))
+    yield ()
 
   def activeChannels(): Task[Channels] =
     for
@@ -38,10 +48,8 @@ object HelloApp extends ZIOAppDefault:
 
   def app: ZIO[HttpClient, Throwable, Unit] =
     for
-      _       <- logInfo("Booting...")
-      backend <- HttpClient.executeRequest(get("http://icanhazip.com/").build())
-      _       <- ZIO.debug(s"Response is \"${backend}\"")
-      _       <- ZIO.debug("Done...")
+      _ <- logInfo("Booting...")
+      _ <- activeChannels().flatMap(updateChannels) repeat Schedule.forever && Schedule.spaced(2.seconds)
     yield ()
 
   def run: ZIO[Any, Throwable, Unit] = app

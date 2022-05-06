@@ -1,7 +1,7 @@
 ---
 - name: ra.a1
   url: https://api.rtvslo.si/stats/logstream/live/7
-  enabled: false
+  enabled: true
 - name: ra.ars
   url: https://api.rtvslo.si/stats/logstream/live/9
   enabled: false
