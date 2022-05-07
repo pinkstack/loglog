@@ -42,4 +42,15 @@ object InfluxDBLive {
           .debug("Booted.")
       )(influx => influx.close())
     }
+
+  val readConfig: ZIO[Any, String, InfluxDBLive.InfluxConfig] =
+    for
+      url <- ZIO
+        .attempt(sys.env.getOrElse("INFLUXDB_URL", "http://0.0.0.0:8086"))
+        .map(new URL(_))
+        .catchAll(_ => ZIO.fail("Wot?"))
+      token  <- ZIO.fromOption(sys.env.get("INFLUXDB_ADMIN_USER_TOKEN")).catchAll(_ => ZIO.fail("Missing \"token\""))
+      org    <- ZIO.fromOption(sys.env.get("INFLUXDB_ORG")).catchAll(_ => ZIO.fail("Missing \"org\""))
+      bucket <- ZIO.fromOption(sys.env.get("INFLUXDB_BUCKET")).catchAll(_ => ZIO.fail("Missing \"bucket\""))
+    yield (url, token, org, bucket)
 }
