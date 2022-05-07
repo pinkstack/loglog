@@ -19,7 +19,7 @@ end
 
 channels = urls.map { |url| [url, read_data(fetch_stats(url))] }
                .select { |_, data| data[:name] }
-               .map { |url, data| data.merge!(url: url, enabled: false) }
+               .map { |url, data| data.merge!(url: url, enabled: true) }
                .sort_by { |c| c[:name] }
                .map { |c| c.map { |k, v| [k.to_s, v.is_a?(String) ? v.to_s : v] }.to_h }
 

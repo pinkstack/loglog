@@ -4,43 +4,43 @@
   enabled: true
 - name: ra.ars
   url: https://api.rtvslo.si/stats/logstream/live/9
-  enabled: false
+  enabled: true
 - name: ra.capo
   url: https://api.rtvslo.si/stats/logstream/live/13
-  enabled: false
+  enabled: true
 - name: ra.kp
   url: https://api.rtvslo.si/stats/logstream/live/12
-  enabled: false
+  enabled: true
 - name: ra.mb1
   url: https://api.rtvslo.si/stats/logstream/live/10
-  enabled: false
+  enabled: true
 - name: ra.mmr
   url: https://api.rtvslo.si/stats/logstream/live/14
-  enabled: false
+  enabled: true
 - name: ra.rsi
   url: https://api.rtvslo.si/stats/logstream/live/11
-  enabled: false
+  enabled: true
 - name: ra.val202
   url: https://api.rtvslo.si/stats/logstream/live/8
   enabled: true
 - name: tv.kp1
   url: https://api.rtvslo.si/stats/logstream/live/4
-  enabled: false
+  enabled: true
 - name: tv.mb1
   url: https://api.rtvslo.si/stats/logstream/live/5
-  enabled: false
+  enabled: true
 - name: tv.mmctv
   url: https://api.rtvslo.si/stats/logstream/live/6
-  enabled: false
+  enabled: true
 - name: tv.slo1
   url: https://api.rtvslo.si/stats/logstream/live/1
   enabled: true
 - name: tv.slo1a
   url: https://api.rtvslo.si/stats/logstream/live/15
-  enabled: false
+  enabled: true
 - name: tv.slo2
   url: https://api.rtvslo.si/stats/logstream/live/2
-  enabled: false
+  enabled: true
 - name: tv.slo3
   url: https://api.rtvslo.si/stats/logstream/live/3
-  enabled: false
+  enabled: true

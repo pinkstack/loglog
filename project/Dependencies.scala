@@ -55,6 +55,10 @@ object Dependencies {
     "dev.zio" %% "zio-json-yaml" % "0.3.0-RC8"
   )
 
+  lazy val influxdb: Seq[ModuleID] = Seq(
+    "com.influxdb" % "influxdb-client-java" % "6.0.0"
+  )
+
   lazy val resolvers: Seq[MavenRepository] = Seq(
     Resolver.sonatypeRepo("releases"),
     Resolver.sonatypeRepo("snapshots"),

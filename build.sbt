@@ -13,8 +13,9 @@ lazy val root = (project in file("."))
   .settings(
     name := "loglog",
     libraryDependencies ++= {
-      zio ++ asyncHttpClient ++ logging ++ circe
+      zio ++ asyncHttpClient ++ circe ++ influxdb ++ logging
     },
     resolvers           := Dependencies.resolvers,
-    Compile / mainClass := Some("com.pinkstack.loglog.HelloApp")
+    Compile / mainClass := Some("com.pinkstack.loglog.CollectorApp"),
+    fork                := true
   )

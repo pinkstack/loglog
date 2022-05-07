@@ -28,6 +28,7 @@ case class HttpClientLive(asyncHttpClient: AsyncHttpClient) extends HttpClient {
 
   def executeRequest(request: Request): Task[String] =
     fromFuture(implicit executionContext => buildRequestFuture(request))
+      .tapError(error => ZIO.debug(s"Got error ${error}"))
 
   def close(): UIO[Unit] =
     attempt(asyncHttpClient.close()).orDie.debug("AsyncHttpClient closed.")
