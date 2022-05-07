@@ -1,6 +1,7 @@
-# logstream
+# loglog
 
-This simple [ZIO] based application collects concurrent viewership metrics from [Slovenian national broadcaster][rtvslo] and its [RTV 356 online services](rtv-356).
+This simple [ZIO] based application collects concurrent viewership metrics 
+from [Slovenian national broadcaster][rtvslo] and its [RTV 356 online services](rtv-356).
 
 ## Authors
 
