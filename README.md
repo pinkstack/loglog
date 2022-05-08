@@ -3,9 +3,19 @@
 This is a simple [ZIO] based application that collects concurrent online viewership metrics
 from [Slovenian national broadcaster][rtvslo] and its [RTV 356 online services][rtv-356].
 
+## Configuration
+
+```bash
+export INFLUXDB_URL="http://0.0.0.0:8086"
+export INFLUXDB_TOKEN="<required>"
+export INFLUXDB_ORG="<required>"
+export INFLUXDB_BUCKET="<required>"
+```
+
 ## Experimentation with networking
 
-To demonstrate the service resiliency to networking exceptions; the following example can be used to inject networking "delay" into "gateway" nginx proxy container. This will cause the service to fail and yet proceed to operate.
+To demonstrate the service resiliency to networking exceptions; the following example can be used to inject networking "
+delay" into "gateway" nginx proxy container. This will cause the service to fail and yet proceed to operate.
 
 ```bash
 ./bin/loglog-dev.sh exec gateway tc qdisc add dev eth0 root netem delay 10s

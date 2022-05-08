@@ -1,20 +1,25 @@
 package com.pinkstack.loglog
 
-import com.influxdb.client.{InfluxDBClient, InfluxDBClientFactory}
-import zio.{RIO, Task, UIO, URIO, ZIO, ZLayer}
-import zio.ZIO.{acquireRelease, attempt, serviceWithZIO}
 import com.influxdb.client.write.Point
-
+import com.influxdb.client.{InfluxDBClient, InfluxDBClientFactory}
+import zio.ZIO.{acquireRelease, attempt, fromOption, serviceWithZIO}
+import zio.{RIO, Task, UIO, URIO, ZIO, ZLayer}
+import scala.jdk.CollectionConverters.*
 import java.net.URL
 
 trait InfluxDB {
-  def write(point: Point): Task[Unit]
+  def write(point: Point): Task[Boolean]
+  def write(points: List[Point]): Task[Boolean]
   def close(): UIO[Unit]
 }
 
 object InfluxDB {
-  def write(point: Point): RIO[InfluxDB, Unit] =
+  def write(point: Point): RIO[InfluxDB, Boolean] =
     serviceWithZIO[InfluxDB](_.write(point))
+
+  def write(points: List[Point]): RIO[InfluxDB, Boolean] =
+    serviceWithZIO[InfluxDB](_.write(points))
+
   def close(): URIO[InfluxDB, Unit] =
     serviceWithZIO[InfluxDB](_.close())
 }
@@ -22,8 +27,11 @@ object InfluxDB {
 case class InfluxDBLive(client: InfluxDBClient) extends InfluxDB {
   private val writeApi = client.getWriteApiBlocking
 
-  override def write(point: Point): Task[Unit] =
-    attempt(writeApi.writePoint(point)).orDie
+  override def write(point: Point): Task[Boolean] =
+    attempt(writeApi.writePoint(point)).orDie.map(_ => true)
+
+  override def write(points: List[Point]): Task[Boolean] =
+    attempt(writeApi.writePoints(points.asJava)).map(_ => true)
 
   override def close(): UIO[Unit] =
     attempt(client.close()).orDie.debug("InfluxDB closed.")
@@ -40,17 +48,18 @@ object InfluxDBLive {
       acquireRelease(
         attempt(InfluxDBLive(InfluxDBClientFactory.create(url.toString, token.toCharArray, org, bucket)))
           .debug("Booted.")
-      )(influx => influx.close())
+      )(_.close())
     }
+
+  private def readEnv(key: String, default: Option[String] = None) =
+    fromOption(default.map(d => sys.env.getOrElse(key, d)).orElse(sys.env.get(key)))
+      .catchAll(_ => ZIO.fail(s"Missing environment variable \"${key}\""))
 
   val readConfig: ZIO[Any, String, InfluxDBLive.InfluxConfig] =
     for
-      url <- ZIO
-        .attempt(sys.env.getOrElse("INFLUXDB_URL", "http://0.0.0.0:8086"))
-        .map(new URL(_))
-        .catchAll(_ => ZIO.fail("Wot?"))
-      token  <- ZIO.fromOption(sys.env.get("INFLUXDB_ADMIN_USER_TOKEN")).catchAll(_ => ZIO.fail("Missing \"token\""))
-      org    <- ZIO.fromOption(sys.env.get("INFLUXDB_ORG")).catchAll(_ => ZIO.fail("Missing \"org\""))
-      bucket <- ZIO.fromOption(sys.env.get("INFLUXDB_BUCKET")).catchAll(_ => ZIO.fail("Missing \"bucket\""))
+      url    <- readEnv("INFLUXDB_URL", Some("http://0.0.0.0:8086")).map(new URL(_))
+      token  <- readEnv("INFLUXDB_TOKEN").orElse(readEnv("INFLUXDB_ADMIN_USER_TOKEN"))
+      org    <- readEnv("INFLUXDB_ORG")
+      bucket <- readEnv("INFLUXDB_BUCKET")
     yield (url, token, org, bucket)
 }
