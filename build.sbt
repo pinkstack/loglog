@@ -1,6 +1,8 @@
 import Dependencies._
 import sbt.Keys.resolvers
 
+import scala.sys.process._
+
 ThisBuild / version      := "0.0.1"
 ThisBuild / scalaVersion := "3.1.1"
 ThisBuild / scalacOptions := Seq(
@@ -10,6 +12,7 @@ ThisBuild / scalacOptions := Seq(
 )
 
 lazy val root = (project in file("."))
+  .enablePlugins(JavaServerAppPackaging, DockerPlugin)
   .settings(
     name := "loglog",
     libraryDependencies ++= {
@@ -19,3 +22,7 @@ lazy val root = (project in file("."))
     Compile / mainClass := Some("com.pinkstack.loglog.CollectorApp"),
     fork                := true
   )
+  .settings(DockerSettings.settings: _*)
+
+lazy val deploy = taskKey[Unit]("Execute the shell script")
+deploy := ("""./bin/deploy.sh""" !)

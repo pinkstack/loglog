@@ -2,12 +2,15 @@ with (import <nixpkgs> {});
 
 mkShell {
   buildInputs = [
-    jdk17_headless
-    sbt
-    ruby
+    ansible
     influxdb
+    jdk17_headless
+    ruby
+    sbt
   ];
   shellHook = ''
     export LOGLOG_HOME=`pwd`
+    export ANSIBLE_HOST_KEY_CHECKING=False
+    export ANSIBLE_INVENTORY=inventory.yaml
   '';
 }

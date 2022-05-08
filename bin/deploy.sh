@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -ex
+
+ansible-playbook playbooks/update-agents.yml \
+  -e CR_PAT=$GH_PROD_DOCKER_TOKEN \
+  -e INFLUXDB_URL=$PROD_INFLUXDB_URL \
+  -e INFLUXDB_ADMIN_USER_TOKEN=$PROD_INFLUXDB_ADMIN_USER_TOKEN \
+  -e INFLUXDB_ORG=$PROD_INFLUXDB_ORG \
+  -e INFLUXDB_BUCKET=$PROD_INFLUXDB_BUCKET -vv

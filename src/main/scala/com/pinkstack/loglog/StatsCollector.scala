@@ -33,8 +33,12 @@ object StatsCollector:
       }.mapError(e => new Exception(e))
     yield ()
 
-  private val patch: Channel => Channel = channel =>
-    channel.copy(url = channel.url.toString.replace("https://api.rtvslo.si", "http://localhost:7070"))
+  private val patchTraffic: Channel => Channel = channel =>
+    Option
+      .when(sys.env.getOrElse("PATCH_TRAFFIC", "0") == "0")(channel)
+      .getOrElse(
+        channel.copy(url = channel.url.toString.replace("https://api.rtvslo.si", "http://localhost:7070"))
+      )
 
   private val activeChannels: Task[Channels] =
     for
@@ -42,7 +46,7 @@ object StatsCollector:
       channels <- fromEither(content.fromYaml[Channels]).mapError(e => new Throwable(e))
     yield channels
       .filter(_.enabled)
-      .map(patch)
+      .map(patchTraffic)
 
   private def updateChannels(measurements: Measurements)(
       channels: Channels
