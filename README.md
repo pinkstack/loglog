@@ -5,8 +5,7 @@ from [Slovenian national broadcaster][rtvslo] and its [RTV 356 online services][
 
 ## Experimentation with networking
 
-To demonstrate the service resiliency to networking exceptions; the following example can be used to inject networking "
-delay" into "gateway" nginx proxy container. This will cause the service to fail and yet proceed to operate.
+To demonstrate the service resiliency to networking exceptions; the following example can be used to inject networking "delay" into "gateway" nginx proxy container. This will cause the service to fail and yet proceed to operate.
 
 ```bash
 ./bin/loglog-dev.sh exec gateway tc qdisc add dev eth0 root netem delay 10s
