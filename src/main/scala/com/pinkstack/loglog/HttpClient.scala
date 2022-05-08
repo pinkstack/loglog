@@ -1,43 +1,34 @@
 package com.pinkstack.loglog
 
 import org.asynchttpclient.Dsl.asyncHttpClient
-import org.asynchttpclient.{AsyncHttpClient, Request}
-import zio.ZIO.{acquireRelease, attempt, fromFuture, serviceWithZIO}
+import org.asynchttpclient.{AsyncHttpClient, AsyncHttpClientConfig, Request, Response}
+import zio.ZIO.{acquireRelease, attempt, fromFuture, fromFutureJava, serviceWithZIO}
 import zio.{RIO, Task, UIO, URIO, ZIO, ZLayer}
 
-import scala.concurrent.{Future, Promise}
-
-trait HttpClient {
-  def executeRequest(request: Request): Task[String]
+trait HttpClient:
+  def execute(request: Request): Task[String]
   def close(): UIO[Unit]
-}
 
-object HttpClient {
-  def executeRequest(request: Request): RIO[HttpClient, String] =
-    serviceWithZIO[HttpClient](_.executeRequest(request))
-
+object HttpClient:
+  def execute(request: Request): RIO[HttpClient, String] =
+    serviceWithZIO[HttpClient](_.execute(request))
   def close(): URIO[HttpClient, Unit] = serviceWithZIO[HttpClient](_.close())
-}
 
-case class HttpClientLive(asyncHttpClient: AsyncHttpClient) extends HttpClient {
-  private def buildRequestFuture(request: Request): Future[String] =
-    val promise          = Promise[String]
-    val listenableFuture = asyncHttpClient.executeRequest(request)
-    listenableFuture.addListener(() => promise.success(listenableFuture.get().getResponseBody), null)
-    promise.future
-
-  def executeRequest(request: Request): Task[String] =
-    fromFuture(implicit executionContext => buildRequestFuture(request))
-      .tapError(error => ZIO.debug(s"Got error ${error}"))
+case class HttpClientLive(asyncHttpClient: AsyncHttpClient) extends HttpClient:
+  def execute(request: Request): Task[String] =
+    fromFutureJava(asyncHttpClient.executeRequest(request)).map(_.getResponseBody)
 
   def close(): UIO[Unit] =
     attempt(asyncHttpClient.close()).orDie.debug("AsyncHttpClient closed.")
-}
 
-object HttpClientLive {
-  val layer: ZLayer[Any, Throwable, HttpClient] = ZLayer.scoped {
-    acquireRelease(
-      attempt(HttpClientLive(asyncHttpClient())).debug("Booted.")
-    )(client => client.close())
-  }
-}
+object HttpClientLive:
+  private val defineLayer: AsyncHttpClient => ZLayer[Any, Throwable, HttpClient] = client =>
+    ZLayer.scoped {
+      acquireRelease(attempt(HttpClientLive(client)).debug("Booted."))(_.close())
+    }
+
+  val layer: ZLayer[Any, Throwable, HttpClient] =
+    defineLayer(asyncHttpClient())
+
+  def layer(config: AsyncHttpClientConfig): ZLayer[Any, Throwable, HttpClient] =
+    defineLayer(asyncHttpClient(config))
