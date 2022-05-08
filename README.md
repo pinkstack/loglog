@@ -12,6 +12,20 @@ export INFLUXDB_ORG="<required>"
 export INFLUXDB_BUCKET="<required>"
 ```
 
+## Deployment
+
+Release a new version with the following SBT command.
+
+```bash
+sbt "release release-version 0.0.1 next-version 0.0.2"
+```
+
+Deploy to production with `sbt` and `ansible` [playbook](playbooks/update-agents.yml) with
+
+```bash
+sbt "docker:publish;deploy"
+```
+
 ## Experimentation with networking
 
 To demonstrate the service resiliency to networking exceptions; the following example can be used to inject networking "
