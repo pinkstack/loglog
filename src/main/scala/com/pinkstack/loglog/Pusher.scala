@@ -4,7 +4,7 @@ import com.influxdb.client.domain.WritePrecision
 import com.influxdb.client.write.Point
 import zio.{Queue, RIO}
 
-object StatsPusher:
+object Pusher:
   val measurementToPoint: ChannelMeasurement => Point = measurement =>
     Point
       .measurement("concurrent_viewers")

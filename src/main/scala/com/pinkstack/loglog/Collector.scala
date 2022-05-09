@@ -16,7 +16,7 @@ import java.net.{URI, URL}
 import java.time.Instant
 import scala.concurrent.{duration, ExecutionContext, Future, Promise}
 
-object StatsCollector:
+object Collector:
   type Measurements = Queue[ChannelMeasurement]
 
   private val readCount: Json => Option[Int] =
@@ -43,9 +43,8 @@ object StatsCollector:
     for
       content  <- Resources.read("channels.yml").orDie
       channels <- fromEither(content.fromYaml[Channels]).mapError(e => new Throwable(e))
-    yield channels
-      .filter(_.enabled)
-      .map(patchTraffic)
+      filteredChannels = channels.filter(_.enabled).map(patchTraffic)
+    yield filteredChannels
 
   private def updateChannels(measurements: Measurements)(
       channels: Channels
