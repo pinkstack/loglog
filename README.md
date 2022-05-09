@@ -10,6 +10,15 @@ export INFLUXDB_URL="http://0.0.0.0:8086"
 export INFLUXDB_TOKEN="<required>"
 export INFLUXDB_ORG="<required>"
 export INFLUXDB_BUCKET="<required>"
+export PATCH_API_URL=http://localhost:7070
+```
+
+## Development
+
+```bash
+./bin/loglog-dev.sh up -d --remove-orphans
+sbt ~reStart # On host
+sbt "~compile;docker:publishLocal;reStartContainer" # Via Docker
 ```
 
 ## Deployment

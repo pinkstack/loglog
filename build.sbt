@@ -16,7 +16,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "loglog",
     libraryDependencies ++= {
-      zio ++ asyncHttpClient ++ circe ++ influxdb ++ logging
+      zio ++ asyncHttpClient ++ circe ++ influxdb ++ lettuce ++ logging
     },
     resolvers           := Dependencies.resolvers,
     Compile / mainClass := Some("com.pinkstack.loglog.CollectorApp"),
@@ -26,3 +26,6 @@ lazy val root = (project in file("."))
 
 lazy val deploy = taskKey[Unit]("Execute the shell script")
 deploy := ("""./bin/deploy.sh""" !)
+
+lazy val reStartContainer = taskKey[Unit]("Restart container")
+reStartContainer := ("./bin/loglog-dev.sh up -d --no-deps --no-build --force-recreate loglog".!)

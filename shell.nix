@@ -5,6 +5,7 @@ mkShell {
     ansible
     influxdb
     jdk17_headless
+    redis
     ruby
     sbt
   ];

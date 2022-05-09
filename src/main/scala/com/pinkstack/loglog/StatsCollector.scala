@@ -27,18 +27,17 @@ object StatsCollector:
       body     <- HttpClient.execute(get(channel.url).build())
       countOpt <- fromEither(circeParse(body)).map(readCount)
       _ <- whenCase(countOpt) {
-        case None => ZIO.fail("Sorry, no data was collected.").unit
+        case None => ZIO.fail("Sorry, no data.").unit
         case Some(count: Int) =>
           measurements.offer(ChannelMeasurement(channel, count)) // <*> ZIO.logInfo("Ok")
       }.mapError(e => new Exception(e))
     yield ()
 
   private val patchTraffic: Channel => Channel = channel =>
-    Option
-      .when(sys.env.getOrElse("PATCH_TRAFFIC", "0") == "0")(channel)
-      .getOrElse(
-        channel.copy(url = channel.url.toString.replace("https://api.rtvslo.si", "http://localhost:7070"))
-      )
+    sys.env
+      .get("PATCH_API_URL")
+      .map(replacement => channel.copy(url = channel.url.toString.replace("https://api.rtvslo.si", replacement)))
+      .getOrElse(channel)
 
   private val activeChannels: Task[Channels] =
     for

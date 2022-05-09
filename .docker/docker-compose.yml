@@ -18,13 +18,36 @@ services:
     ports:
       - "8086:8086"
     environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
-      - DOCKER_INFLUXDB_INIT_ORG=loglog-org
-      - DOCKER_INFLUXDB_INIT_BUCKET=loglog
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_USER_TOKEN}
+      - DOCKER_INFLUXDB_INIT_BUCKET=loglog
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_ORG=loglog-org
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME}
     volumes:
       - influxdata:/var/lib/influxdb2
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+    ports:
+      - "6379:6379"
+
+  loglog:
+    image: ghcr.io/pinkstack/loglog:latest
+    environment:
+      - INFLUXDB_BUCKET=loglog
+      - INFLUXDB_ORG=loglog-org
+      - INFLUXDB_TOKEN=${INFLUXDB_ADMIN_USER_TOKEN}
+      - INFLUXDB_URL=http://influxdb:8086
+      - PATCH_API_URL=http://gateway
+    depends_on:
+      - redis
+      - influxdb
+      - gateway
+
+
 volumes:
   influxdata: { }
+  redisdata: { }

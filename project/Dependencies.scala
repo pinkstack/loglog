@@ -30,6 +30,10 @@ object Dependencies {
     "org.asynchttpclient" % "async-http-client"
   ).map(_ % Versions.asyncHttp)
 
+  lazy val lettuce: Modules = Seq(
+    "io.lettuce" % "lettuce-core" % "6.1.8.RELEASE"
+  )
+
   lazy val circe: Modules = Seq(
     "io.circe" %% "circe-core",
     "io.circe" %% "circe-generic",

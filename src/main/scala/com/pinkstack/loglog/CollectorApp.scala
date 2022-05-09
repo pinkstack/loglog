@@ -7,7 +7,7 @@ import zio.ZIO.logInfo
 object CollectorApp extends ZIOAppDefault:
   def app: ZIO[HttpClient with InfluxDB, Throwable, Unit] =
     for
-      _            <- logInfo("Booting... 🐇")
+      _            <- logInfo("Booting. 🐇")
       measurements <- Queue.sliding[ChannelMeasurement](200)
       collection   <- StatsCollector.collectAndOffer(measurements).repeat(Schedule.spaced(10.seconds)).fork
       pushing      <- StatsPusher.observeAndPush(measurements).fork
