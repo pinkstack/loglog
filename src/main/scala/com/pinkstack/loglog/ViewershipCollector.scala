@@ -5,7 +5,7 @@ import io.circe.{Json, ParsingFailure}
 import org.asynchttpclient.Dsl.{asyncHttpClient, get, post}
 import org.asynchttpclient.{AsyncHttpClient, ListenableFuture, Request, Response}
 import zio.Console.{print, printLine}
-import zio.ZIO.{acquireRelease, acquireReleaseWith, attempt, attemptBlocking, fromEither, logInfo, whenCase}
+import zio.ZIO.{acquireRelease, acquireReleaseWith, attempt, attemptBlocking, foreachPar, fromEither, logInfo, whenCase}
 import zio.json.*
 import zio.json.yaml.*
 import zio.*
@@ -16,7 +16,7 @@ import java.net.{URI, URL}
 import java.time.Instant
 import scala.concurrent.{duration, ExecutionContext, Future, Promise}
 
-object Collector:
+object ViewershipCollector:
   type Measurements = Queue[ChannelMeasurement]
 
   private val readCount: Json => Option[Int] =
@@ -27,9 +27,8 @@ object Collector:
       body     <- HttpClient.execute(get(channel.url).build())
       countOpt <- fromEither(circeParse(body)).map(readCount)
       _ <- whenCase(countOpt) {
-        case None => ZIO.fail("Sorry, no data.").unit
-        case Some(count: Int) =>
-          measurements.offer(ChannelMeasurement(channel, count)) // <*> ZIO.logInfo("Ok")
+        case None             => ZIO.fail("Sorry, no data.").unit
+        case Some(count: Int) => measurements.offer(ChannelMeasurement(channel, count))
       }.mapError(e => new Exception(e))
     yield ()
 
@@ -49,14 +48,12 @@ object Collector:
   private def updateChannels(measurements: Measurements)(
       channels: Channels
   ): ZIO[HttpClient, Throwable, Vector[Unit]] =
-    ZIO
-      .foreachPar(channels) { channel =>
-        fetchChannelStats(measurements, channel)
-          .catchSome { case ex: java.util.concurrent.TimeoutException =>
-            ZIO.logWarning(s"Caught timeout exception ${ex.getMessage}")
-          }
-      }
-      .withParallelism(4)
+    foreachPar(channels) { channel =>
+      fetchChannelStats(measurements, channel)
+        .catchSome { case ex: java.util.concurrent.TimeoutException =>
+          ZIO.logWarning(s"Caught timeout exception ${ex.getMessage}")
+        }
+    }.withParallelism(4)
 
   val collectAndOffer: Measurements => RIO[HttpClient, Vector[Unit]] = measurements =>
     activeChannels

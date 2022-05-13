@@ -16,11 +16,12 @@ lazy val root = (project in file("."))
   .settings(
     name := "loglog",
     libraryDependencies ++= {
-      zio ++ asyncHttpClient ++ circe ++ influxdb ++ lettuce ++ logging
+      zio ++ zioTest ++ asyncHttpClient ++ circe ++ influxdb ++ tsconfig ++ logging
     },
     resolvers           := Dependencies.resolvers,
     Compile / mainClass := Some("com.pinkstack.loglog.CollectorApp"),
-    fork                := true
+    fork                := true,
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
   .settings(DockerSettings.settings: _*)
 

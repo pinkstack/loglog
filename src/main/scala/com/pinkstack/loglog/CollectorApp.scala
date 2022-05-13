@@ -3,16 +3,17 @@ package com.pinkstack.loglog
 import org.asynchttpclient.Dsl.config as asyncHttpClientConfig
 import zio.Schedule.spaced
 import zio.ZIO.logInfo
-import zio.{durationInt, Queue, Schedule, ZIO, ZIOAppDefault}
+import zio.{Queue, Schedule, ZIO, ZIOAppDefault, durationInt}
 
 object CollectorApp extends ZIOAppDefault:
   def app: ZIO[HttpClient with InfluxDB, Throwable, Unit] =
     for
       _            <- logInfo("Booting. 🐇")
       measurements <- Queue.sliding[ChannelMeasurement](200)
-      _ <- Collector
+      _ <- ViewershipCollector
         .collectAndOffer(measurements)
-        .repeat(spaced(10.seconds)) raceFirst Pusher.observeAndPush(measurements)
+        .repeat(spaced(10.seconds))
+        .raceFirst(Pusher.observeAndPush(measurements))
     yield ()
 
   def run: ZIO[Any, Throwable, Unit] =

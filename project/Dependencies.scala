@@ -7,10 +7,11 @@ object Dependencies {
   object Versions {
     // val sttp: Version    = "3.5.2"
     val circe: Version     = "0.15.0-M1"
-    val logback: Version   = "1.3.0-alpha14"
+    val logback: Version   = "1.3.0-alpha15"
     val monocle: Version   = "3.1.0"
     val zio: Version       = "2.0.0-RC6"
     val asyncHttp: Version = "2.12.3"
+    val tsconfig: Version    = "1.4.2"
   }
 
   /*
@@ -38,7 +39,7 @@ object Dependencies {
     "io.circe" %% "circe-core",
     "io.circe" %% "circe-generic",
     "io.circe" %% "circe-parser"
-    // "io.circe" %% "circe-optics", Not yet compatible with Scala 3 (Read: https://github.com/circe/circe-optics/issues/230)
+    // "io.circe" %% "circe-optics", // Not yet compatible with Scala 3 (Read: https://github.com/circe/circe-optics/issues/230)
     // "io.circe" %% "circe-fs2"
   ).map(_ % Versions.circe)
 
@@ -59,9 +60,19 @@ object Dependencies {
     "dev.zio" %% "zio-json-yaml" % "0.3.0-RC8"
   )
 
+  lazy val zioTest: Seq[ModuleID] = Seq(
+    "dev.zio" %% "zio-test",
+    "dev.zio" %% "zio-test-sbt",
+    "dev.zio" %% "zio-test-magnolia"
+  ).map(_ % Versions.zio % "test")
+
   lazy val influxdb: Seq[ModuleID] = Seq(
     "com.influxdb" % "influxdb-client-java" % "6.0.0"
   )
+
+  lazy val tsconfig: Seq[ModuleID] = Seq(
+    "com.typesafe" % "config" % "1.4.2"
+  ).map(_ % Versions.tsconfig)
 
   lazy val resolvers: Seq[MavenRepository] = Seq(
     Resolver.sonatypeRepo("releases"),
