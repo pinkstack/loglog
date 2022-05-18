@@ -1,31 +1,28 @@
 package com.pinkstack.loglog
 
+import com.typesafe.config.{ConfigException, ConfigFactory}
 import org.asynchttpclient.Dsl.config as asyncHttpClientConfig
 import zio.Schedule.spaced
-import zio.ZIO.logInfo
-import zio.{Queue, Schedule, ZIO, ZIOAppDefault, durationInt}
+import zio.ZIO.{logInfo, service}
+import zio.{durationInt, Queue, Schedule, ZIO, ZIOAppDefault, ZLayer}
 
 object CollectorApp extends ZIOAppDefault:
-  def app: ZIO[HttpClient with InfluxDB, Throwable, Unit] =
+  private val configLayer = ZLayer.fromFunction(() => Config.tryLoading)
+
+  def app: ZIO[Config.AppConfig & HttpClient & InfluxDB, Throwable, Unit] =
     for
-      _            <- logInfo("Booting. 🐇")
-      measurements <- Queue.sliding[ChannelMeasurement](200)
+      config       <- service[Config.AppConfig]
+      _            <- logInfo(s"Booting,... 🐇")
+      measurements <- Queue.sliding[ChannelMeasurement](config.measurements.queueCapacity)
       _ <- ViewershipCollector
         .collectAndOffer(measurements)
         .repeat(spaced(10.seconds))
-        .raceFirst(Pusher.observeAndPush(measurements))
+        .raceFirst(
+          Pusher.observeAndPush(
+            measurements
+          )
+        )
     yield ()
 
   def run: ZIO[Any, Throwable, Unit] =
-    InfluxDBLive.readConfig
-      .flatMap(influxConfig =>
-        app.provideLayer(
-          HttpClientLive.layer(
-            asyncHttpClientConfig
-              .setConnectTimeout(2000)
-              .setReadTimeout(2000)
-              .build()
-          ) ++ InfluxDBLive.layer(influxConfig)
-        )
-      )
-      .mapError(e => new Exception(s"System crashed with ${e}"))
+    app.provideLayer(configLayer ++ (configLayer >+> HttpClientLive.layer) ++ (configLayer >+> InfluxDBLive.layer))

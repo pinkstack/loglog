@@ -1,5 +1,6 @@
 package com.pinkstack.loglog
 
+import org.asynchttpclient.Dsl.config as asyncHttpClientConfig
 import org.asynchttpclient.Dsl.asyncHttpClient
 import org.asynchttpclient.{AsyncHttpClient, AsyncHttpClientConfig, Request, Response}
 import zio.ZIO.{acquireRelease, attempt, fromFuture, fromFutureJava, serviceWithZIO}
@@ -22,13 +23,17 @@ case class HttpClientLive(asyncHttpClient: AsyncHttpClient) extends HttpClient:
     attempt(asyncHttpClient.close()).orDie.debug("AsyncHttpClient closed.")
 
 object HttpClientLive:
-  private val defineLayer: AsyncHttpClient => ZLayer[Any, Throwable, HttpClient] = client =>
-    ZLayer.scoped {
+  private val clientConfig = ZIO.service[Config.AppConfig].map(_.httpClient)
+
+  private val mkClient: ZIO[Config.AppConfig & zio.Scope, Throwable, HttpClientLive] =
+    clientConfig.flatMap(clientConfig =>
+      val client = asyncHttpClient(
+        asyncHttpClientConfig()
+          .setConnectTimeout(clientConfig.connectTimeout)
+          .setReadTimeout(clientConfig.readTimeout)
+          .build()
+      )
       acquireRelease(attempt(HttpClientLive(client)).debug("Booted."))(_.close())
-    }
+    )
 
-  val layer: ZLayer[Any, Throwable, HttpClient] =
-    defineLayer(asyncHttpClient())
-
-  def layer(config: AsyncHttpClientConfig): ZLayer[Any, Throwable, HttpClient] =
-    defineLayer(asyncHttpClient(config))
+  val layer: ZLayer[Config.AppConfig, Throwable, HttpClient] = ZLayer.scoped(mkClient)

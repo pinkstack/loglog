@@ -2,10 +2,12 @@ package com.pinkstack.loglog
 
 import com.influxdb.client.write.Point
 import com.influxdb.client.{InfluxDBClient, InfluxDBClientFactory}
-import zio.ZIO.{acquireRelease, attempt, fromOption, serviceWithZIO}
+import com.pinkstack.loglog.Config.InfluxConfig
+import zio.ZIO.{acquireRelease, attempt, fromOption, service, serviceWithZIO}
 import zio.{RIO, Task, UIO, URIO, ZIO, ZLayer}
-import scala.jdk.CollectionConverters.*
+
 import java.net.URL
+import scala.jdk.CollectionConverters.*
 
 trait InfluxDB {
   def write(point: Point): Task[Boolean]
@@ -38,28 +40,16 @@ case class InfluxDBLive(client: InfluxDBClient) extends InfluxDB {
 }
 
 object InfluxDBLive {
-  type Token        = String
-  type Org          = String
-  type Bucket       = String
-  type InfluxConfig = (URL, Token, Org, Bucket)
-
-  val layer: InfluxConfig => ZLayer[Any, Throwable, InfluxDB] = (url, token, org, bucket) =>
-    ZLayer.scoped {
-      acquireRelease(
-        attempt(InfluxDBLive(InfluxDBClientFactory.create(url.toString, token.toCharArray, org, bucket)))
-          .debug("Booted.")
-      )(_.close())
-    }
-
-  private def readEnv(key: String, default: Option[String] = None) =
-    fromOption(default.map(d => sys.env.getOrElse(key, d)).orElse(sys.env.get(key)))
-      .catchAll(_ => ZIO.fail(s"Missing environment variable \"${key}\""))
-
-  val readConfig: ZIO[Any, String, InfluxDBLive.InfluxConfig] =
-    for
-      url    <- readEnv("INFLUXDB_URL", Some("http://0.0.0.0:8086")).map(new URL(_))
-      token  <- readEnv("INFLUXDB_TOKEN").orElse(readEnv("INFLUXDB_ADMIN_USER_TOKEN"))
-      org    <- readEnv("INFLUXDB_ORG")
-      bucket <- readEnv("INFLUXDB_BUCKET")
-    yield (url, token, org, bucket)
+  val layer: ZLayer[Config.AppConfig, Throwable, InfluxDB] =
+    ZLayer.scoped(
+      service[Config.AppConfig]
+        .map(_.influx)
+        .flatMap { case InfluxConfig(url, token, org, bucket) =>
+          acquireRelease(
+            attempt(
+              InfluxDBLive(InfluxDBClientFactory.create(url.toString, token.toCharArray, org, bucket))
+            ).debug("Booted.")
+          )(_.close())
+        }
+    )
 }

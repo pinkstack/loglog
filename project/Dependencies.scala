@@ -11,7 +11,7 @@ object Dependencies {
     val monocle: Version   = "3.1.0"
     val zio: Version       = "2.0.0-RC6"
     val asyncHttp: Version = "2.12.3"
-    val tsconfig: Version    = "1.4.2"
+    val tsconfig: Version  = "1.4.2"
   }
 
   /*
@@ -71,7 +71,7 @@ object Dependencies {
   )
 
   lazy val tsconfig: Seq[ModuleID] = Seq(
-    "com.typesafe" % "config" % "1.4.2"
+    "com.typesafe" % "config"
   ).map(_ % Versions.tsconfig)
 
   lazy val resolvers: Seq[MavenRepository] = Seq(
