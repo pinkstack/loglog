@@ -11,6 +11,9 @@ ThisBuild / scalacOptions := Seq(
   "-language:adhocExtensions"
 )
 
+ThisBuild / publishArtifact := false
+ThisBuild / skip / publish  := true
+
 lazy val root = (project in file("."))
   .enablePlugins(JavaServerAppPackaging, DockerPlugin)
   .settings(
