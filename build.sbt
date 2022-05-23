@@ -11,9 +11,6 @@ ThisBuild / scalacOptions := Seq(
   "-language:adhocExtensions"
 )
 
-ThisBuild / publishArtifact := false
-ThisBuild / skip / publish  := true
-
 lazy val root = (project in file("."))
   .enablePlugins(JavaServerAppPackaging, DockerPlugin)
   .settings(
@@ -28,8 +25,14 @@ lazy val root = (project in file("."))
   )
   .settings(DockerSettings.settings: _*)
 
+// Custom tasks
 lazy val deploy = taskKey[Unit]("Execute the shell script")
 deploy := ("""./bin/deploy.sh""" !)
 
 lazy val reStartContainer = taskKey[Unit]("Restart container")
 reStartContainer := ("./bin/loglog-dev.sh up -d --no-deps --no-build --force-recreate loglog".!)
+
+// Publishing
+ThisBuild / publishArtifact := false
+ThisBuild / publishTo       := Some(Resolver.file("Unused transient repository", file("target/loglog-root")))
+ThisBuild / skip / publish  := true
