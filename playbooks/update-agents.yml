@@ -20,6 +20,7 @@
         --restart=always \
         -e INFLUXDB_URL={{ INFLUXDB_URL }} \
         -e INFLUXDB_ADMIN_USER_TOKEN={{ INFLUXDB_ADMIN_USER_TOKEN }} \
+        -e INFLUXDB_TOKEN={{ INFLUXDB_TOKEN }} \
         -e INFLUXDB_ORG={{ INFLUXDB_ORG }} \
         -e INFLUXDB_BUCKET={{ INFLUXDB_BUCKET }} \
         --log-opt max-size=10m \
