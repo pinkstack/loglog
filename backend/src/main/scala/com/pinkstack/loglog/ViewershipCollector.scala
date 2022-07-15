@@ -26,7 +26,7 @@ object ViewershipCollector:
     for
       body     <- HttpClient.execute(get(channel.url).build())
       countOpt <- fromEither(circeParse(body)).map(readCount)
-      _ <- whenCase(countOpt) {
+      _        <- whenCase(countOpt) {
         case None             => ZIO.fail("Sorry, no data.").unit
         case Some(count: Int) => measurements.offer(ChannelMeasurement(channel, count))
       }.mapError(e => new Exception(e))
@@ -46,13 +46,12 @@ object ViewershipCollector:
     yield filteredChannels
 
   private def updateChannels(measurements: Measurements)(
-      channels: Channels
+    channels: Channels
   ): ZIO[HttpClient, Throwable, Vector[Unit]] =
     foreachPar(channels) { channel =>
-      fetchChannelStats(measurements, channel)
-        .catchSome { case ex: java.util.concurrent.TimeoutException =>
-          ZIO.logWarning(s"Caught timeout exception ${ex.getMessage}")
-        }
+      fetchChannelStats(measurements, channel).catchSome { case ex: java.util.concurrent.TimeoutException =>
+        ZIO.logWarning(s"Caught timeout exception ${ex.getMessage}")
+      }
     }.withParallelism(4)
 
   val collectAndOffer: Measurements => RIO[HttpClient, Vector[Unit]] = measurements =>

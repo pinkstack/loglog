@@ -9,13 +9,12 @@ import zio.{RIO, Task, UIO, URIO, ZIO, ZLayer}
 import java.net.URL
 import scala.jdk.CollectionConverters.*
 
-trait InfluxDB {
+trait InfluxDB:
   def write(point: Point): Task[Boolean]
   def write(points: List[Point]): Task[Boolean]
   def close(): UIO[Unit]
-}
 
-object InfluxDB {
+object InfluxDB:
   def write(point: Point): RIO[InfluxDB, Boolean] =
     serviceWithZIO[InfluxDB](_.write(point))
 
@@ -24,9 +23,8 @@ object InfluxDB {
 
   def close(): URIO[InfluxDB, Unit] =
     serviceWithZIO[InfluxDB](_.close())
-}
 
-case class InfluxDBLive(client: InfluxDBClient) extends InfluxDB {
+case class InfluxDBLive(client: InfluxDBClient) extends InfluxDB:
   private val writeApi = client.getWriteApiBlocking
 
   override def write(point: Point): Task[Boolean] =
@@ -37,9 +35,8 @@ case class InfluxDBLive(client: InfluxDBClient) extends InfluxDB {
 
   override def close(): UIO[Unit] =
     attempt(client.close()).orDie.debug("InfluxDB closed.")
-}
 
-object InfluxDBLive {
+object InfluxDBLive:
   val layer: ZLayer[Config.AppConfig, Throwable, InfluxDB] =
     ZLayer.scoped(
       service[Config.AppConfig]
@@ -52,4 +49,3 @@ object InfluxDBLive {
           )(_.close())
         }
     )
-}

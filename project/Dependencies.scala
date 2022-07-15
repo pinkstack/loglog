@@ -7,9 +7,9 @@ object Dependencies {
   object Versions {
     // val sttp: Version    = "3.5.2"
     val circe: Version     = "0.15.0-M1"
-    val logback: Version   = "1.3.0-alpha15"
+    val logback: Version   = "1.3.0-alpha16"
     val monocle: Version   = "3.1.0"
-    val zio: Version       = "2.0.0-RC6"
+    val zio: Version       = "2.0.0"
     val asyncHttp: Version = "2.12.3"
     val tsconfig: Version  = "1.4.2"
   }
@@ -56,8 +56,8 @@ object Dependencies {
     "dev.zio" %% "zio",
     "dev.zio" %% "zio-streams"
   ).map(_      % Versions.zio) ++ Seq(
-    "dev.zio" %% "zio-json"      % "0.3.0-RC8",
-    "dev.zio" %% "zio-json-yaml" % "0.3.0-RC8"
+    "dev.zio" %% "zio-json"      % "0.3.0-RC10",
+    "dev.zio" %% "zio-json-yaml" % "0.3.0-RC10"
   )
 
   lazy val zioTest: Seq[ModuleID] = Seq(
@@ -67,7 +67,7 @@ object Dependencies {
   ).map(_ % Versions.zio % "test")
 
   lazy val influxdb: Seq[ModuleID] = Seq(
-    "com.influxdb" % "influxdb-client-java" % "6.0.0"
+    "com.influxdb" % "influxdb-client-java" % "6.3.0"
   )
 
   lazy val tsconfig: Seq[ModuleID] = Seq(

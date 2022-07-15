@@ -29,5 +29,9 @@ object DockerSettings {
         )
       case other => List(other)
     }
+    /*
+    Docker / publish      := {},
+    Docker / publishLocal := {}
+     */
   )
 }

@@ -7,7 +7,6 @@ import java.net.URL
 import scala.util.Try
 
 object Config:
-  type ConfigError = ConfigException.Missing | ConfigException.WrongType
   final case class MeasurementsConfig(queueCapacity: Int)
   final case class InfluxConfig(url: URL, token: String, org: String, bucket: String)
   final case class HttpClientConfig(patchApiUrl: String, connectTimeout: Int, readTimeout: Int)
@@ -32,5 +31,3 @@ object Config:
       InfluxConfig(url, token, org, bucket),
       HttpClientConfig(patchApiUrl, connectTimeout, readTimeout)
     )
-
-  def tryLoading: AppConfig = load.get

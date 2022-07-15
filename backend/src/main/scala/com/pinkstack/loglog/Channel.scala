@@ -17,8 +17,8 @@ given Conversion[String, URL] with
 case class Channel(name: String, url: URL, enabled: Boolean)
 
 object Channel {
-  implicit val urlDecoder: JsonDecoder[URL]         = JsonDecoder[String].map(new URL(_))
-  implicit val channelDecoder: JsonDecoder[Channel] = DeriveJsonDecoder.gen[Channel]
+  given urlDecoder: JsonDecoder[URL]         = JsonDecoder[String].map(new URL(_))
+  given channelDecoder: JsonDecoder[Channel] = DeriveJsonDecoder.gen[Channel]
 }
 
 case class ChannelMeasurement(channel: Channel, count: Int = 0, createdAt: Long = Instant.now().toEpochMilli)
