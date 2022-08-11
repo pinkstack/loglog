@@ -3,7 +3,7 @@ package com.pinkstack.loglog
 import org.asynchttpclient.Dsl.config as asyncHttpClientConfig
 import org.asynchttpclient.Dsl.asyncHttpClient
 import org.asynchttpclient.{AsyncHttpClient, AsyncHttpClientConfig, Request, Response}
-import zio.ZIO.{acquireRelease, attempt, fromFuture, fromFutureJava, serviceWithZIO}
+import zio.ZIO.{acquireRelease, attempt, fromFuture, fromFutureJava, serviceWithZIO, succeed, logInfo}
 import zio.{RIO, Task, UIO, URIO, ZIO, ZLayer}
 
 trait HttpClient:
@@ -13,7 +13,7 @@ trait HttpClient:
 object HttpClient:
   def execute(request: Request): RIO[HttpClient, String] =
     serviceWithZIO[HttpClient](_.execute(request))
-  def close(): URIO[HttpClient, Unit] = serviceWithZIO[HttpClient](_.close())
+  def close(): URIO[HttpClient, Unit]                    = serviceWithZIO[HttpClient](_.close())
 
 case class HttpClientLive(asyncHttpClient: AsyncHttpClient) extends HttpClient:
   def execute(request: Request): Task[String] =
@@ -33,7 +33,10 @@ object HttpClientLive:
           .setReadTimeout(clientConfig.readTimeout)
           .build()
       )
-      acquireRelease(attempt(HttpClientLive(client)).debug("Booted."))(_.close())
+      acquireRelease {
+        attempt(HttpClientLive(client)) <* logInfo("HttpClient booted.")
+      }(_.close())
     )
 
-  val layer: ZLayer[Config.AppConfig, Throwable, HttpClient] = ZLayer.scoped(mkClient)
+  val layer: ZLayer[Config.AppConfig, Throwable, HttpClient] =
+    ZLayer.scoped(mkClient)

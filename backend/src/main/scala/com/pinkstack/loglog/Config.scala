@@ -1,7 +1,7 @@
 package com.pinkstack.loglog
 
 import com.typesafe.config.{ConfigException, ConfigFactory}
-import zio.{IO, ZIO}
+import zio.{IO, ZIO, ZLayer}
 
 import java.net.URL
 import scala.util.Try
@@ -31,3 +31,6 @@ object Config:
       InfluxConfig(url, token, org, bucket),
       HttpClientConfig(patchApiUrl, connectTimeout, readTimeout)
     )
+
+  val live: ZLayer[Any, Throwable, AppConfig] =
+    ZLayer.fromZIO(ZIO.fromTry(load))

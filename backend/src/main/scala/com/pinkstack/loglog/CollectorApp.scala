@@ -9,8 +9,6 @@ import zio.ZLayer.fromZIO
 import zio.{durationInt, Queue, Schedule, ZIO, ZIOAppDefault, ZLayer}
 
 object CollectorApp extends ZIOAppDefault:
-  private val configLayer: ZLayer[Any, Throwable, AppConfig] = fromZIO(ZIO.fromTry(Config.load))
-
   def program: ZIO[Config.AppConfig & HttpClient & InfluxDB, Throwable, Unit] =
     for
       config       <- service[Config.AppConfig]
@@ -27,4 +25,6 @@ object CollectorApp extends ZIOAppDefault:
     yield ()
 
   def run =
-    program.provideLayer(configLayer ++ (configLayer >+> HttpClientLive.layer) ++ (configLayer >+> InfluxDBLive.layer))
+    program.provideLayer(
+      Config.live ++ (Config.live >+> HttpClientLive.layer) ++ (Config.live >+> InfluxDBLive.layer)
+    )

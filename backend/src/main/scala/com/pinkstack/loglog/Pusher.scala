@@ -2,7 +2,8 @@ package com.pinkstack.loglog
 
 import com.influxdb.client.domain.WritePrecision
 import com.influxdb.client.write.Point
-import zio.{Queue, RIO}
+import zio.{Queue, RIO, ZIO}
+import ZIO.succeed
 
 object Pusher:
   val measurementToPoint: ChannelMeasurement => Point = measurement =>
@@ -16,5 +17,6 @@ object Pusher:
   val observeAndPush: Queue[ChannelMeasurement] => RIO[InfluxDB, Unit] =
     _.take
       .map(measurementToPoint)
+      .tap(p => ZIO.succeed(println(p.toLineProtocol)))
       .flatMap(InfluxDB.write)
       .forever

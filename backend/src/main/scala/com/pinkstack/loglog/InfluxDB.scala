@@ -37,15 +37,15 @@ case class InfluxDBLive(client: InfluxDBClient) extends InfluxDB:
     attempt(client.close()).orDie.debug("InfluxDB closed.")
 
 object InfluxDBLive:
-  val layer: ZLayer[Config.AppConfig, Throwable, InfluxDB] =
-    ZLayer.scoped(
-      service[Config.AppConfig]
-        .map(_.influx)
-        .flatMap { case InfluxConfig(url, token, org, bucket) =>
-          acquireRelease(
-            attempt(
-              InfluxDBLive(InfluxDBClientFactory.create(url.toString, token.toCharArray, org, bucket))
-            ).debug("Booted.")
-          )(_.close())
-        }
-    )
+  val layer: ZLayer[Config.AppConfig, Throwable, InfluxDB] = ZLayer.scoped {
+    for
+      config   <- service[Config.AppConfig].map(_.influx)
+      resource <- acquireRelease(
+        attempt(
+          InfluxDBLive(
+            InfluxDBClientFactory.create(config.url.toString, config.token.toCharArray, config.org, config.bucket)
+          )
+        ).debug("Booted.")
+      )((l: InfluxDBLive) => l.close())
+    yield resource
+  }
