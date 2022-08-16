@@ -10,6 +10,7 @@ mkShell {
     sbt
     nodejs
     yarn
+    flyctl
   ];
   shellHook = ''
     export LOGLOG_HOME=`pwd`

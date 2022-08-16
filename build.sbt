@@ -3,8 +3,8 @@ import sbt.Keys.resolvers
 
 import scala.sys.process._
 
-ThisBuild / version      := "0.0.2"
-ThisBuild / scalaVersion := "3.1.3"
+ThisBuild / version       := "0.0.2"
+ThisBuild / scalaVersion  := "3.1.3"
 ThisBuild / scalacOptions := Seq(
   // "-Ykind-projector:underscores",
   "-source:future",
@@ -16,7 +16,7 @@ lazy val backend = (project in file("backend"))
   .enablePlugins(JavaServerAppPackaging, DockerPlugin)
   .settings(
     libraryDependencies ++= {
-      zio ++ zioTest ++ asyncHttpClient ++ circe ++ influxdb ++ tsconfig ++ logging
+      zio ++ zioTest ++ asyncHttpClient ++ circe ++ influxdb ++ coralogix ++ tsconfig ++ logging
     },
     resolvers           := Dependencies.resolvers,
     Compile / mainClass := Some("com.pinkstack.loglog.CollectorApp"),

@@ -7,7 +7,7 @@ object Dependencies {
   object Versions {
     // val sttp: Version    = "3.5.2"
     val circe: Version     = "0.15.0-M1"
-    val logback: Version   = "1.3.0-alpha16"
+    val logback: Version   = "1.3.0-beta0"
     val monocle: Version   = "3.1.0"
     val zio: Version       = "2.0.0"
     val asyncHttp: Version = "2.12.3"
@@ -55,7 +55,7 @@ object Dependencies {
   lazy val zio: Seq[ModuleID] = Seq(
     "dev.zio" %% "zio",
     "dev.zio" %% "zio-streams"
-  ).map(_      % Versions.zio) ++ Seq(
+  ).map(_ % Versions.zio) ++ Seq(
     "dev.zio" %% "zio-json"      % "0.3.0-RC10",
     "dev.zio" %% "zio-json-yaml" % "0.3.0-RC10"
   )
@@ -68,6 +68,12 @@ object Dependencies {
 
   lazy val influxdb: Seq[ModuleID] = Seq(
     "com.influxdb" % "influxdb-client-java" % "6.3.0"
+  )
+
+  lazy val coralogix: Seq[ModuleID] = Seq(
+    "com.coralogix.sdk" % "coralogix-sdk"               % "2.0.6",
+    "io.opentelemetry"  % "opentelemetry-sdk-metrics"   % "1.16.0",
+    "io.opentelemetry"  % "opentelemetry-exporter-otlp" % "1.16.0"
   )
 
   lazy val tsconfig: Seq[ModuleID] = Seq(
