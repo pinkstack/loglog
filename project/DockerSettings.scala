@@ -17,9 +17,6 @@ object DockerSettings {
     dockerExposedPorts                                   := Seq.empty[Int],
     dockerExposedUdpPorts                                := Seq.empty[Int],
     packageName                                          := "loglog",
-    dockerEnvVars                                        := Map(
-      "LOGLOG_ENV" -> "development"
-    ),
     dockerCommands                                       := dockerCommands.value.flatMap {
       case add @ Cmd("RUN", args @ _*) if args.contains("id") =>
         List(
