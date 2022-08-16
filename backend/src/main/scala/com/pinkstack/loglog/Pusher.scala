@@ -14,24 +14,17 @@ object Pusher:
       .addField("count", measurement.count)
       .time(measurement.createdAt, WritePrecision.MS)
 
-  def observeAndPush(measurements: Queue[ChannelMeasurement]): ZIO[CoraLogger, Throwable, Unit] = {
-    def writer =
-      for
-        logger      <- service[CoraLogger]
-        measurement <- measurements.take
-        point       <- succeed(measurementToPoint(measurement))
-        _           <- succeed(println(point.toLineProtocol))
-        _           <- attempt {
-          logger.counter("collection", "viewer-cnt-test", measurement.count)
+  def observePushAndLog(measurements: Queue[ChannelMeasurement]): ZIO[CoraLogger & InfluxDB, Throwable, Unit] =
+    service[CoraLogger].flatMap { logger =>
+      measurements.take
+        .map(measurement => (measurement, measurementToPoint(measurement)))
+        .flatMap { case (measurement, point) =>
+          InfluxDB.write(point)
+            *> logger.info(
+              s"Current viewers collected. Channel: ${measurement.channel.name}, " +
+                s"Count: ${measurement.count}, " +
+                s"Source: ${measurement.channel.url}"
+            ) *> succeed(println(point.toLineProtocol))
         }
-        _           <- attempt(InfluxDB.write(point))
-      yield ()
-
-    writer.forever
-  }
-  // measurements.take
-  //   .tap(p => )
-  //   .map(measurementToPoint)
-  //   .tap(p => ZIO.succeed(println(p.toLineProtocol)))
-  //   .flatMap(InfluxDB.write)
-  //   .forever
+        .forever
+    }

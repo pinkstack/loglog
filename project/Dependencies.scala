@@ -6,12 +6,13 @@ object Dependencies {
 
   object Versions {
     // val sttp: Version    = "3.5.2"
-    val circe: Version     = "0.15.0-M1"
-    val logback: Version   = "1.3.0-beta0"
-    val monocle: Version   = "3.1.0"
-    val zio: Version       = "2.0.0"
-    val asyncHttp: Version = "2.12.3"
-    val tsconfig: Version  = "1.4.2"
+    val circe: Version         = "0.15.0-M1"
+    val logback: Version       = "1.3.0-beta0"
+    val monocle: Version       = "3.1.0"
+    val zio: Version           = "2.0.0"
+    val asyncHttp: Version     = "2.12.3"
+    val tsconfig: Version      = "1.4.2"
+    val opentelemetry: Version = "1.17.0"
   }
 
   /*
@@ -71,10 +72,11 @@ object Dependencies {
   )
 
   lazy val coralogix: Seq[ModuleID] = Seq(
-    "com.coralogix.sdk" % "coralogix-sdk"               % "2.0.6",
-    "io.opentelemetry"  % "opentelemetry-sdk-metrics"   % "1.16.0",
-    "io.opentelemetry"  % "opentelemetry-exporter-otlp" % "1.16.0"
-  )
+    "com.coralogix.sdk" % "coralogix-sdk" % "2.0.10"
+  ) ++ Seq(
+    "io.opentelemetry" % "opentelemetry-sdk-metrics",
+    "io.opentelemetry" % "opentelemetry-exporter-otlp"
+  ).map(_ % Versions.opentelemetry)
 
   lazy val tsconfig: Seq[ModuleID] = Seq(
     "com.typesafe" % "config"
@@ -92,6 +94,7 @@ object Dependencies {
     "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     "Sonatype staging" at "https://oss.sonatype.org/content/repositories/staging",
     "Java.net Maven2 Repository" at "https://download.java.net/maven/2/",
-    "Twitter Repository" at "https://maven.twttr.com"
+    "Twitter Repository" at "https://maven.twttr.com",
+    "Coralogix" at "https://cgx.jfrog.io/artifactory/maven"
   )
 }

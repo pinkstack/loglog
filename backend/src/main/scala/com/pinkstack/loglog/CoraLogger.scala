@@ -2,68 +2,45 @@ package com.pinkstack.loglog
 
 import api.CoralogixLogger
 import entities.Severity
-import io.opentelemetry.api.metrics.MeterProvider
-import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter
-import io.opentelemetry.sdk.metrics.SdkMeterProvider
-import io.opentelemetry.sdk.metrics.`export`.PeriodicMetricReader
-import zio.{Task, ZIO, ZLayer}
+import zio.{Task, UIO, URIO, ZIO, ZLayer}
 import zio.ZIO.{attempt, fail, fromOption, serviceWithZIO, succeed}
 
 trait CoraLogger:
-  def log(message: String, severity: Severity = Severity.INFO): Task[Unit]
-  def critical(message: String): Task[Unit]
-  def counter(meter: String, counterName: String, value: Long): Task[Unit]
+  def log(message: String, severity: Severity = Severity.INFO): UIO[Unit]
+  def critical(message: String): UIO[Unit]
+  def info(message: String): UIO[Unit]
 
 object CoraLogger:
-  def log(message: String, severity: Severity = Severity.INFO) =
+  def log(message: String, severity: Severity = Severity.INFO): URIO[CoraLogger, Unit] =
     serviceWithZIO[CoraLogger](_.log(message, severity))
 
-  def critical(message: String) =
+  def critical(message: String): URIO[CoraLogger, Unit] =
     serviceWithZIO[CoraLogger](_.critical(message))
 
-  def counter(meter: String, counterName: String, value: Long) =
-    serviceWithZIO[CoraLogger](_.counter(meter, counterName, value))
+  def info(message: String): URIO[CoraLogger, Unit] =
+    serviceWithZIO[CoraLogger](_.info(message))
 
-case class CoraLoggerLive(coralogixLogger: CoralogixLogger, meterProvider: SdkMeterProvider) extends CoraLogger:
-  def log(message: String, severity: Severity = Severity.INFO): Task[Unit] =
+case class CoraLoggerLive(coralogixLogger: CoralogixLogger) extends CoraLogger:
+  override def log(message: String, severity: Severity = Severity.INFO): UIO[Unit] =
     succeed(coralogixLogger.log(severity, message))
 
-  def critical(message: String): Task[Unit] =
+  override def critical(message: String): UIO[Unit] =
     succeed(coralogixLogger.critical(message))
 
-  def counter(meter: String, counterName: String, value: Long) =
-    for
-      meter   <- succeed(meterProvider.meterBuilder(meter).build())
-      counter <- succeed(meter.counterBuilder(counterName).build())
-      _       <- succeed(counter.add(value)) *> succeed(meterProvider.forceFlush())
-    yield ()
+  override def info(message: String): UIO[Unit] =
+    succeed(coralogixLogger.info(message))
 
 object CoraLoggerLive:
   private def buildLayer: Task[CoraLoggerLive] =
     for
-      readPrivateKey  <- zio.System.env("CORALOGIX_PRIVATE_KEY")
-      privateKey      <- fromOption(readPrivateKey).orDieWith(_ =>
+      loglogEnv      <- zio.System.envOrElse("LOGLOG_ENV", "development")
+      readPrivateKey <- zio.System.env("CORALOGIX_PRIVATE_KEY")
+      privateKey     <- fromOption(readPrivateKey).orDieWith(_ =>
         new RuntimeException("\"CORALOGIX_PRIVATE_KEY\" is not set.")
       )
-      _               <- succeed(CoralogixLogger.configure(privateKey, "loglog", "dev-system"))
-      metricsEndpoint <- succeed("https://prometheus-gateway.coralogix.us/prometheus/api/v1/write")
-      meterProvider   <- attempt(
-        SdkMeterProvider
-          .builder()
-          .registerMetricReader(
-            PeriodicMetricReader
-              .builder(
-                OtlpGrpcMetricExporter
-                  .builder()
-                  .setEndpoint(metricsEndpoint)
-                  .addHeader("Authorization", "Bearer " + privateKey)
-                  .build()
-              )
-              .build()
-          )
-          .build()
-      )
-      resource        <- succeed(CoraLoggerLive(new CoralogixLogger("CoraLogger"), meterProvider))
+      _              <- succeed(CoralogixLogger.setDebugMode(false))
+      _              <- succeed(CoralogixLogger.configure(privateKey, "loglog", s"${loglogEnv}-system"))
+      resource       <- succeed(CoraLoggerLive.apply(new CoralogixLogger("CoraLogger")))
     yield resource
 
   val layer: ZLayer[Any, Throwable, CoraLogger] =

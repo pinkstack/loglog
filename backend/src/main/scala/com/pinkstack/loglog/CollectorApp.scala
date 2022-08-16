@@ -16,15 +16,15 @@ object CollectorApp extends ZIOAppDefault:
     for
       logger       <- service[CoraLogger]
       config       <- service[Config.AppConfig]
-      _            <- logInfo(s"Booting,... 🐇")
-      _            <- logger.log("Booting loglog")
-      _            <- logger.counter("experimental", "boots", 1)
+      loglogEnv    <- zio.System.envOrElse("LOGLOG_ENV", "development")
+      _            <- logInfo(s"Booting,... 🐇 in ${loglogEnv}")
+      _            <- logger.log(s"Booting loglog in ${loglogEnv}")
       measurements <- Queue.sliding[ChannelMeasurement](config.measurements.queueCapacity)
       _            <- ViewershipCollector
         .collectAndOffer(measurements)
         .repeat(spaced(10.seconds))
         .raceFirst(
-          Pusher.observeAndPush(
+          Pusher.observePushAndLog(
             measurements
           )
         )
