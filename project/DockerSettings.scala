@@ -16,7 +16,11 @@ object DockerSettings {
     dockerRepository                                     := Some("ghcr.io"),
     dockerExposedPorts                                   := Seq.empty[Int],
     dockerExposedUdpPorts                                := Seq.empty[Int],
-    dockerCommands := dockerCommands.value.flatMap {
+    packageName                                          := "loglog",
+    dockerEnvVars                                        := Map(
+      "LOGLOG_ENV" -> "development"
+    ),
+    dockerCommands                                       := dockerCommands.value.flatMap {
       case add @ Cmd("RUN", args @ _*) if args.contains("id") =>
         List(
           Cmd("LABEL", "maintainer Oto Brglez <otobrglez@gmail.com>"),
@@ -27,7 +31,7 @@ object DockerSettings {
           Cmd("ENV", "LOGLOG_VERSION", version.value),
           add
         )
-      case other => List(other)
+      case other                                              => List(other)
     }
     /*
     Docker / publish      := {},

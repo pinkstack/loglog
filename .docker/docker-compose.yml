@@ -41,7 +41,9 @@ services:
       - INFLUXDB_ORG=loglog-org
       - INFLUXDB_TOKEN=${INFLUXDB_ADMIN_USER_TOKEN}
       - INFLUXDB_URL=http://influxdb:8086
-      - PATCH_API_URL=http://gateway
+      - CORALOGIX_PRIVATE_KEY=${CORALOGIX_PRIVATE_KEY}
+      - CORALOGIX_LOG_URL=${CORALOGIX_LOG_URL}
+      # - PATCH_API_URL=http://gateway
     depends_on:
       - redis
       - influxdb
