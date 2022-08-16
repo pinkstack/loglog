@@ -38,7 +38,7 @@ object CoraLoggerLive:
       privateKey     <- fromOption(readPrivateKey).orDieWith(_ =>
         new RuntimeException("\"CORALOGIX_PRIVATE_KEY\" is not set.")
       )
-      _              <- succeed(CoralogixLogger.setDebugMode(false))
+      _              <- succeed(CoralogixLogger.setDebugMode(true))
       _              <- succeed(CoralogixLogger.configure(privateKey, "loglog", s"${loglogEnv}-system"))
       resource       <- succeed(CoraLoggerLive.apply(new CoralogixLogger("CoraLogger")))
     yield resource
