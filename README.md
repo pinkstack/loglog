@@ -13,9 +13,6 @@ export INFLUXDB_TOKEN="<required>"
 export INFLUXDB_ORG="<required>"
 export INFLUXDB_BUCKET="<required>"
 export PATCH_API_URL=http://localhost:7070
-
-export CORALOGIX_PRIVATE_KEY=<secret_uuid>
-export CORALOGIX_LOG_URL=https://api.coralogix.com/api/v1/logs
 ```
 
 ## Development

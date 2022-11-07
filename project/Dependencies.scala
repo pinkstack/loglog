@@ -7,34 +7,17 @@ object Dependencies {
   object Versions {
     // val sttp: Version    = "3.5.2"
     val circe: Version         = "0.15.0-M1"
-    val logback: Version       = "1.3.0-beta0"
+    val logback: Version       = "1.4.4"
     val monocle: Version       = "3.1.0"
-    val zio: Version           = "2.0.0"
+    val zio: Version           = "2.0.3"
     val asyncHttp: Version     = "2.12.3"
     val tsconfig: Version      = "1.4.2"
-    val opentelemetry: Version = "1.17.0"
   }
-
-  /*
-  lazy val sttp: Modules = Seq(
-    "com.softwaremill.sttp.client3" %% "core",
-    "com.softwaremill.sttp.client3" %% "circe",
-    // "com.softwaremill.sttp.client3" %% "httpclient-backend-zio",
-    // "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio",
-    "com.softwaremill.sttp.client3" %% "httpclient-backend",
-    "com.softwaremill.sttp.client3" %% "async-http-client-backend",
-    "com.softwaremill.sttp.client3" %% "slf4j-backend"
-  ).map(_ % Versions.sttp)
-   */
 
   lazy val asyncHttpClient: Modules = Seq(
     "org.asynchttpclient" % "async-http-client-bom",
     "org.asynchttpclient" % "async-http-client"
   ).map(_ % Versions.asyncHttp)
-
-  lazy val lettuce: Modules = Seq(
-    "io.lettuce" % "lettuce-core" % "6.1.8.RELEASE"
-  )
 
   lazy val circe: Modules = Seq(
     "io.circe" %% "circe-core",
@@ -57,8 +40,8 @@ object Dependencies {
     "dev.zio" %% "zio",
     "dev.zio" %% "zio-streams"
   ).map(_ % Versions.zio) ++ Seq(
-    "dev.zio" %% "zio-json"      % "0.3.0-RC10",
-    "dev.zio" %% "zio-json-yaml" % "0.3.0-RC10"
+    "dev.zio" %% "zio-json"      % "0.3.0",
+    "dev.zio" %% "zio-json-yaml" % "0.3.0"
   )
 
   lazy val zioTest: Seq[ModuleID] = Seq(
@@ -68,15 +51,8 @@ object Dependencies {
   ).map(_ % Versions.zio % "test")
 
   lazy val influxdb: Seq[ModuleID] = Seq(
-    "com.influxdb" % "influxdb-client-java" % "6.3.0"
+    "com.influxdb" % "influxdb-client-java" % "6.7.0"
   )
-
-  lazy val coralogix: Seq[ModuleID] = Seq(
-    "com.coralogix.sdk" % "coralogix-sdk" % "2.0.10"
-  ) ++ Seq(
-    "io.opentelemetry" % "opentelemetry-sdk-metrics",
-    "io.opentelemetry" % "opentelemetry-exporter-otlp"
-  ).map(_ % Versions.opentelemetry)
 
   lazy val tsconfig: Seq[ModuleID] = Seq(
     "com.typesafe" % "config"
